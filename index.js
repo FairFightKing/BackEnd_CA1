@@ -24,10 +24,10 @@ app.get('/', (req,res) => {
 app.get('/hs', (req, res)  => {
     if(req.body.id) {
         async function getCard() {
-            try{
-                let cardData = await collection.findOne({"_id": ObjectId(req.body.id)})
+            let cardData = await collection.findOne({"_id": ObjectId(req.body.id)})
+            if (cardData) {
                 res.status(200).json(cardData)
-            } catch{
+            } else {
                 res.status(400).send('Could not find specified ID')
             }
         }
@@ -45,7 +45,11 @@ app.get('/hs', (req, res)  => {
 app.post('/hs', (req, res) => {
     if(req.body.Name && req.body.Mana && req.body.Attack && req.body.HP){
         let NewCard = new HsCard(req.body.Name,req.body.Mana,req.body.Golden,req.body.Attack,req.body.HP,req.body.Keyword)
-        collection.insertOne(NewCard).then(() => res.status(200)).catch(() => res.status(400));
+        async function insertCard() {
+            await collection.insertOne(NewCard)
+            res.status(200).json(NewCard);
+        }
+        insertCard();
     } else {
         res.status(400).send("You're missing a mandatory field")
     }
@@ -88,6 +92,7 @@ app.delete('/hs',((req, res) => {
         async function deleteOne() {
             try {
                 await collection.deleteOne({"_id": ObjectId(req.body.id)})
+                res.status(200).send('Delete successful')
             }catch (e) {
                 res.status(400).send("Failed, either not found or couldn't delete")
             }
@@ -119,11 +124,11 @@ class HsCard{
     Keyword;
     Attack;
     constructor(Name,Mana,Golden = false, Attack,HP,Keyword = 'none') {
-        this.Name = Name;
-        this.Mana = Mana;
-        this.Golden = Golden;
-        this.Attack = Attack;
-        this.HP = HP;
-        this.Keyword = Keyword;
+        this.Name = String(Name);
+        this.Mana = Number(Mana);
+        this.Golden = Boolean(Golden);
+        this.Attack = Number(Attack);
+        this.HP = Number(HP);
+        this.Keyword = String(Keyword);
     }
 }
