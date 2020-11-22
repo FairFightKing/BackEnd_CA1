@@ -18,7 +18,7 @@ let collection;
 run();
 // HomePage
 app.get('/', (req,res) => {
-    res.send('Please use /hs thanks.')
+    res.status(200).send('Please use /hs thanks.')
 })
 // READ
 app.get('/hs', (req, res)  => {
@@ -26,16 +26,16 @@ app.get('/hs', (req, res)  => {
         async function getCard() {
             try{
                 let cardData = await collection.findOne({"_id": ObjectId(req.body.id)})
-                res.json(cardData).status(200)
+                res.status(200).json(cardData)
             } catch{
-                res.send('Could not find specified ID').status(400)
+                res.status(400).send('Could not find specified ID')
             }
         }
         getCard();
     } else {
         async function getCards () {
             let CardsData = await collection.find().toArray()
-            res.json(CardsData).status(200)
+            res.status(200).json(CardsData)
         }
         getCards();
     }
@@ -43,36 +43,61 @@ app.get('/hs', (req, res)  => {
 })
 // CREATE
 app.post('/hs', (req, res) => {
-    let NewCard = new HsCard(req.body.Name,req.body.Mana,req.body.Golden,req.body.Attack,req.body.HP,req.body.Keyword)
-    collection.insertOne(NewCard).then(() => res.status(200)).catch(() => res.status(400));
+    if(req.body.Name && req.body.Mana && req.body.Attack && req.body.HP){
+        let NewCard = new HsCard(req.body.Name,req.body.Mana,req.body.Golden,req.body.Attack,req.body.HP,req.body.Keyword)
+        collection.insertOne(NewCard).then(() => res.status(200)).catch(() => res.status(400));
+    } else {
+        res.status(400).send("You're missing a mandatory field")
+    }
+
 })
 // UPDATE
 app.put('/hs', (req, res) => {
     let card;
-    async function findCard(){
-        card = await collection.findOne({"_id": ObjectId(req.body.id)})
-        if(card !== null){
-            let UpdateCard = new HsCard(
-                req.body.Name ? req.body.Name : card.Name,
-                req.body.Mana ? req.body.Mana : card.Mana,
-                req.body.Golden ? req.body.Golden : card.Golden,
-                req.body.Attack ? req.body.Attack : card.Attack,
-                req.body.HP ? req.body.HP : card.HP,
-                req.body.Keyword ? req.body.Keyword : card.Keyword,
-            )
-            try {
-                await collection.updateOne({"_id": ObjectId(req.body.id)},{$set:UpdateCard})
-                res.status(200).send('Update Successful')
-            } catch (e) {
-                res.send('Update Failed But card found').status(400)
+    if(req.body.id) {
+        async function findCard() {
+            card = await collection.findOne({"_id": ObjectId(req.body.id)})
+            if (card !== null) {
+                let UpdateCard = new HsCard(
+                    req.body.Name ? req.body.Name : card.Name,
+                    req.body.Mana ? req.body.Mana : card.Mana,
+                    req.body.Golden ? req.body.Golden : card.Golden,
+                    req.body.Attack ? req.body.Attack : card.Attack,
+                    req.body.HP ? req.body.HP : card.HP,
+                    req.body.Keyword ? req.body.Keyword : card.Keyword,
+                )
+                try {
+                    await collection.updateOne({"_id": ObjectId(req.body.id)}, {$set: UpdateCard})
+                    res.status(200).send('Update Successful')
+                } catch (e) {
+                    res.status(400).send('Update Failed But card found')
+                }
+            } else {
+                res.status(400).send('card not found,no matching id')
             }
-        } else{
-            res.send('card not found,no matching id').status(400)
         }
-    }
-    findCard();
-})
 
+        findCard();
+    } else {
+        res.status(400).send('You need to specify an ID please.')
+    }
+})
+// DELETE
+app.delete('/hs',((req, res) => {
+    if (req.body.id){
+        async function deleteOne() {
+            try {
+                await collection.deleteOne({"_id": ObjectId(req.body.id)})
+            }catch (e) {
+                res.status(400).send("Failed, either not found or couldn't delete")
+            }
+        }
+        deleteOne();
+    }else {
+        res.status(400).send('We only take id, please specify id.')
+    }
+
+}))
 // connection to DB
 async function run(){
     try {

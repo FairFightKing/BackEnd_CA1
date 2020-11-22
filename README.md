@@ -16,3 +16,4 @@ I also wanted to not use that async func that we launch without argument, I real
 Same for the run func that I would prefer to use the app.listen function to do that but I don't know if that's possible.
 Inside the Read I made it so if we don't use any ID it will return the whole database and if we put any ID it will look for a matching one and send it to the user.
 Plus I used ternary operator to simplify the Update, so we can put any field we want, and it will keep the ones we didn't specify;
+Added empty fields so we know its not correct and proper feedbacks
