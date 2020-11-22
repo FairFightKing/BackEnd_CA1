@@ -72,7 +72,7 @@ app.put('/hs', (req, res) => {
                 )
                 try {
                     await collection.updateOne({"_id": ObjectId(req.body.id)}, {$set: UpdateCard})
-                    res.status(200).send('Update Successful')
+                    res.status(200).json(UpdateCard)
                 } catch (e) {
                     res.status(400).send('Update Failed But card found')
                 }
